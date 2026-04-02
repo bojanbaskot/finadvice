@@ -66,11 +66,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 import os
 import dj_database_url
 
+_db_url = (
+    os.environ.get('DATABASE_URL') or
+    os.environ.get('DATABASE_PUBLIC_URL') or
+    f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+)
+print(f"[DB] Using: {_db_url[:40]}")
 DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        conn_max_age=600
-    )
+    'default': dj_database_url.parse(_db_url, conn_max_age=600)
 }
 
 AUTH_PASSWORD_VALIDATORS = [
