@@ -6,7 +6,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-j7(#ir0$^hq(+pd+j4=errrvp(w3o7n=g(hr2dwi(bi)jo(+h5')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS += ['.up.railway.app']
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
+CSRF_TRUSTED_ORIGINS += ['https://*.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
