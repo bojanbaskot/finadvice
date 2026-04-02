@@ -1,0 +1,22 @@
+{% load humanize %}
+<div class="card border-0 shadow-sm h-100">
+  {% with img=property.cover_image %}
+  {% if img %}
+  <img src="{{ img.image.url }}" class="card-img-top" alt="{{ property.title }}" style="height:200px;object-fit:cover;">
+  {% else %}
+  <div class="bg-light d-flex align-items-center justify-content-center" style="height:200px;"><i class="bi bi-house text-muted fs-1"></i></div>
+  {% endif %}
+  {% endwith %}
+  <div class="card-body">
+    <div class="d-flex justify-content-between mb-1">
+      <span class="badge {% if property.listing_type == 'sale' %}bg-success{% else %}bg-info{% endif %}">{{ property.get_listing_type_display }}</span>
+      <span class="badge bg-secondary">{{ property.get_country_display }}</span>
+    </div>
+    <h6 class="card-title"><a href="{{ property.get_absolute_url }}" class="text-decoration-none text-dark">{{ property.title }}</a></h6>
+    <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>{{ property.city }}</p>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <strong class="text-primary">{{ property.price|intcomma }} {{ property.currency }}</strong>
+      <small class="text-muted">{{ property.area_sqm }} m2</small>
+    </div>
+  </div>
+</div>

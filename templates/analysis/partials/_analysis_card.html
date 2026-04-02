@@ -1,0 +1,28 @@
+{% if compact %}
+<div class="d-flex gap-3 mb-3 pb-3 border-bottom align-items-start">
+  <div class="bg-danger bg-opacity-10 rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width:70px;height:60px;">
+    <i class="bi bi-bar-chart-line text-danger fs-4"></i>
+  </div>
+  <div>
+    <a href="{{ report.get_absolute_url }}" class="text-decoration-none text-dark fw-semibold small">{{ report.title }}</a>
+    <p class="text-muted mb-0" style="font-size:.75rem;">{{ report.category.name }} &bull; {{ report.reading_time_min }} min</p>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm h-100">
+  {% if report.cover_image %}<img src="{{ report.cover_image.url }}" class="card-img-top" style="height:180px;object-fit:cover;">
+  {% else %}<div class="bg-danger bg-opacity-10 d-flex align-items-center justify-content-center" style="height:180px;"><i class="bi bi-bar-chart-line text-danger fs-1"></i></div>{% endif %}
+  <div class="card-body d-flex flex-column">
+    <div class="d-flex gap-2 mb-2">
+      <span class="badge bg-danger">{{ report.category.name }}</span>
+      {% if report.status == 'premium' %}<span class="badge bg-warning text-dark"><i class="bi bi-lock me-1"></i>Premium</span>{% endif %}
+    </div>
+    <h6 class="card-title"><a href="{{ report.get_absolute_url }}" class="text-decoration-none text-dark">{{ report.title }}</a></h6>
+    <p class="text-muted small flex-grow-1">{{ report.executive_sum|truncatewords:20 }}</p>
+    <div class="d-flex justify-content-between mt-2">
+      <small class="text-muted">{{ report.published_at|date:"d.m.Y" }}</small>
+      <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ report.reading_time_min }} min</small>
+    </div>
+  </div>
+</div>
+{% endif %}

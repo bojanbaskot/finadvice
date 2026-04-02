@@ -1,0 +1,44 @@
+<footer class="bg-dark text-light mt-5 pt-5 pb-3">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <h5 class="fw-bold"><i class="bi bi-graph-up-arrow me-2"></i>{{ site_settings.site_name }}</h5>
+        <p class="text-muted">{{ site_settings.tagline }}</p>
+      </div>
+      <div class="col-lg-2 col-6">
+        <h6 class="text-uppercase text-muted fw-bold mb-3">Moduli</h6>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'news:news-list' %}" class="text-muted text-decoration-none">Vijesti</a></li>
+          <li><a href="{% url 'news:property-list' %}" class="text-muted text-decoration-none">Nekretnine</a></li>
+          <li><a href="{% url 'elearning:course-list' %}" class="text-muted text-decoration-none">Edukacija</a></li>
+          <li><a href="{% url 'calculators:index' %}" class="text-muted text-decoration-none">Kalkulatori</a></li>
+          <li><a href="{% url 'analysis:analysis-list' %}" class="text-muted text-decoration-none">Analize</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2 col-6">
+        <h6 class="text-uppercase text-muted fw-bold mb-3">Alati</h6>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'calculators:loan' %}" class="text-muted text-decoration-none">Kredit</a></li>
+          <li><a href="{% url 'calculators:mortgage' %}" class="text-muted text-decoration-none">Hipoteka</a></li>
+          <li><a href="{% url 'calculators:investment' %}" class="text-muted text-decoration-none">Investicija</a></li>
+          <li><a href="{% url 'calculators:interest-rates' %}" class="text-muted text-decoration-none">Kamatne stope</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4">
+        <h6 class="text-uppercase text-muted fw-bold mb-3">Kontakt</h6>
+        {% if site_settings.contact_email %}<p class="text-muted mb-1"><i class="bi bi-envelope me-2"></i>{{ site_settings.contact_email }}</p>{% endif %}
+        {% if site_settings.phone %}<p class="text-muted mb-1"><i class="bi bi-telephone me-2"></i>{{ site_settings.phone }}</p>{% endif %}
+      </div>
+    </div>
+    <hr class="border-secondary mt-4">
+    <div class="row align-items-center">
+      <div class="col-md-6 text-muted small">
+        &copy; {% now "Y" %} {{ site_settings.site_name }}. Sva prava zadrzana.
+      </div>
+      <div class="col-md-6 text-end text-muted small">
+        <a href="{% url 'core:about' %}" class="text-muted me-3">O nama</a>
+        <a href="{% url 'core:contact' %}" class="text-muted">Kontakt</a>
+      </div>
+    </div>
+  </div>
+</footer>

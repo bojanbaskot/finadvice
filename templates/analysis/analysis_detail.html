@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }} - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="d-flex gap-2 mb-2">
+        <span class="badge bg-danger">{{ report.category.name }}</span>
+        {% if report.status == 'premium' %}<span class="badge bg-warning text-dark"><i class="bi bi-lock me-1"></i>Premium</span>{% endif %}
+      </div>
+      <h1 class="h2 fw-bold">{{ report.title }}</h1>
+      {% if report.subtitle %}<p class="lead text-muted">{{ report.subtitle }}</p>{% endif %}
+      <div class="text-muted small mb-4">
+        <i class="bi bi-calendar me-1"></i>{{ report.published_at|date:"d.m.Y" }}
+        {% if report.author %}<span class="ms-3"><i class="bi bi-person me-1"></i>{{ report.author.get_full_name|default:report.author.username }}</span>{% endif %}
+        <span class="ms-3"><i class="bi bi-clock me-1"></i>{{ report.reading_time_min }} min</span>
+      </div>
+      {% if report.cover_image %}<img src="{{ report.cover_image.url }}" class="img-fluid rounded mb-4 w-100" style="max-height:400px;object-fit:cover;">{% endif %}
+      <div class="alert alert-light border-start border-danger border-3 mb-4">
+        <strong><i class="bi bi-lightbulb me-2 text-danger"></i>Sazetak</strong>
+        <p class="mb-0 mt-1">{{ report.executive_sum }}</p>
+      </div>
+      <div class="article-body">{{ report.body|safe }}</div>
+      {% for dp in data_points %}
+      <div class="card border-0 shadow-sm my-4"><div class="card-body">
+        <h6 class="fw-semibold mb-3">{{ dp.chart_title }}</h6>
+        <canvas id="chart_{{ dp.pk }}" height="250"></canvas>
+        {% if dp.caption %}<p class="text-muted small mt-2">{{ dp.caption }}</p>{% endif %}
+        {% if dp.source %}<p style="font-size:.7rem;" class="text-muted">Izvor: {{ dp.source }}</p>{% endif %}
+      </div></div>
+      {% endfor %}
+      {% if report.pdf_export %}<div class="mt-4"><a href="{{ report.pdf_export.url }}" class="btn btn-outline-danger" download><i class="bi bi-file-pdf me-2"></i>Preuzmi PDF analizu</a></div>{% endif %}
+    </div>
+    <div class="col-lg-4">
+      {% if related %}
+      <div class="card border-0 shadow-sm sticky-top" style="top:80px;">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Slicne analize</h6>
+          {% for r in related %}<div class="mb-3 pb-3 border-bottom"><a href="{{ r.get_absolute_url }}" class="text-decoration-none text-dark small fw-semibold">{{ r.title }}</a></div>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}{% if data_points %}{% for dp in data_points %}
+<script>
+(function(){var ctx=document.getElementById('chart_{{ dp.pk }}');if(!ctx)return;new Chart(ctx,{type:'{{ dp.chart_type }}',data:{labels:{{ dp.labels_json|safe }},datasets:{{ dp.datasets_json|safe }}},options:{responsive:true}});})();
+</script>{% endfor %}{% endif %}{% endblock %}

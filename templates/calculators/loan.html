@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Kredit kalkulator - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-5">
+      <h1 class="h3 fw-bold mb-4"><i class="bi bi-bank me-2 text-primary"></i>Kredit kalkulator</h1>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3"><label class="form-label fw-semibold">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}</div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100 btn-lg"><i class="bi bi-calculator me-2"></i>Izracunaj</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% if results %}
+    <div class="col-lg-7">
+      <h4 class="fw-bold mb-4">Rezultati</h4>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card border-0 bg-primary text-white p-3 text-center rounded-3"><div class="small mb-1">Mjesecna rata</div><div class="fs-4 fw-bold">{{ results.monthly_payment|floatformat:2 }} BAM</div></div></div>
+        <div class="col-md-4"><div class="card border-0 bg-light p-3 text-center rounded-3"><div class="small text-muted mb-1">Ukupno platiti</div><div class="fs-5 fw-bold">{{ results.total_payment|floatformat:2 }} BAM</div></div></div>
+        <div class="col-md-4"><div class="card border-0 bg-light p-3 text-center rounded-3"><div class="small text-muted mb-1">Ukupna kamata</div><div class="fs-5 fw-bold text-danger">{{ results.total_interest|floatformat:2 }} BAM</div></div></div>
+      </div>
+      <canvas id="loanChart" height="200"></canvas>
+      <div class="mt-4">
+        <h6 class="fw-bold">Plan otplate (prvih 12 rata)</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead><tr><th>Rata</th><th>Anuitet</th><th>Glavnica</th><th>Kamata</th><th>Ostatak</th></tr></thead>
+            <tbody>{% for row in results.schedule|slice:":12" %}<tr><td>{{ row.month }}</td><td>{{ row.payment|floatformat:2 }}</td><td>{{ row.principal|floatformat:2 }}</td><td>{{ row.interest|floatformat:2 }}</td><td>{{ row.balance|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}{% if results %}
+<script>
+new Chart(document.getElementById('loanChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for r in results.schedule %}'{{ r.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [
+      {label:'Glavnica',data:[{% for r in results.schedule %}{{ r.principal }}{% if not forloop.last %},{% endif %}{% endfor %}],backgroundColor:'rgba(13,110,253,0.7)'},
+      {label:'Kamata',data:[{% for r in results.schedule %}{{ r.interest }}{% if not forloop.last %},{% endif %}{% endfor %}],backgroundColor:'rgba(220,53,69,0.6)'}
+    ]
+  },
+  options:{responsive:true,scales:{x:{stacked:true},y:{stacked:true}}}
+});
+</script>{% endif %}{% endblock %}

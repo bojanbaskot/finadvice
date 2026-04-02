@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ site_settings.site_name }} - {{ site_settings.tagline }}{% endblock %}
+{% block content %}
+<section class="bg-primary text-white py-5">
+  <div class="container py-3">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="display-5 fw-bold">{{ site_settings.tagline }}</h1>
+        <p class="lead">Finansijske vijesti, nekretnine, edukacija, kalkulatori i analize za trzista BiH i Srbije.</p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="{% url 'news:news-list' %}" class="btn btn-light btn-lg"><i class="bi bi-newspaper me-2"></i>Vijesti</a>
+          <a href="{% url 'calculators:interest-rates' %}" class="btn btn-outline-light btn-lg"><i class="bi bi-percent me-2"></i>Kamatne stope</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if latest_rates %}
+<div class="bg-dark text-white py-2">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3 flex-wrap small">
+      <span class="badge bg-warning text-dark"><i class="bi bi-percent me-1"></i>Kamatne stope</span>
+      {% for rate in latest_rates %}
+      <span>{{ rate.bank.short_name|default:rate.bank.name }}: <strong>{{ rate.rate }}%</strong> ({{ rate.get_loan_type_display }})</span>
+      {% endfor %}
+      <a href="{% url 'calculators:interest-rates' %}" class="text-warning ms-auto">Sve stope &rarr;</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="bi bi-newspaper text-primary fs-1 mb-3"></i>
+          <h5>Vijesti &amp; Nekretnine</h5>
+          <p class="text-muted small">Finansijski newsfeed i nekretnine iz BiH i Srbije.</p>
+          <a href="{% url 'news:news-list' %}" class="btn btn-outline-primary btn-sm mt-auto">Otvori</a>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="bi bi-mortarboard text-success fs-1 mb-3"></i>
+          <h5>E-Learning</h5>
+          <p class="text-muted small">Finansijska edukacija - kursevi, lekcije i kvizovi.</p>
+          <a href="{% url 'elearning:course-list' %}" class="btn btn-outline-success btn-sm mt-auto">Otvori</a>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="bi bi-calculator text-warning fs-1 mb-3"></i>
+          <h5>Kalkulatori</h5>
+          <p class="text-muted small">Kredit, hipoteka, investicija, stednja i poredenje kamatnih stopa.</p>
+          <a href="{% url 'calculators:index' %}" class="btn btn-outline-warning btn-sm mt-auto">Otvori</a>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="bi bi-bar-chart-line text-danger fs-1 mb-3"></i>
+          <h5>Dubinske analize</h5>
+          <p class="text-muted small">Makro, bankarski sektor, trziste nekretnina i investicije.</p>
+          <a href="{% url 'analysis:analysis-list' %}" class="btn btn-outline-danger btn-sm mt-auto">Otvori</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if featured_news %}
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h4 fw-bold mb-0"><i class="bi bi-fire me-2 text-danger"></i>Istaknute vijesti</h2>
+      <a href="{% url 'news:news-list' %}" class="text-muted small">Sve vijesti &rarr;</a>
+    </div>
+    <div class="row g-4">
+      {% for article in featured_news %}
+      <div class="col-md-3">{% include "news/partials/_news_card.html" %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if featured_properties %}
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h4 fw-bold mb-0"><i class="bi bi-house me-2 text-primary"></i>Istaknute nekretnine</h2>
+      <a href="{% url 'news:property-list' %}" class="text-muted small">Sve nekretnine &rarr;</a>
+    </div>
+    <div class="row g-4">
+      {% for property in featured_properties %}
+      <div class="col-md-3">{% include "news/partials/_property_card.html" %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5">
+      {% if featured_courses %}
+      <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="h4 fw-bold mb-0"><i class="bi bi-mortarboard me-2 text-success"></i>Kursevi</h2>
+          <a href="{% url 'elearning:course-list' %}" class="text-muted small">Svi kursevi &rarr;</a>
+        </div>
+        {% for course in featured_courses %}{% include "elearning/partials/_course_card.html" with compact=True %}{% endfor %}
+      </div>
+      {% endif %}
+      {% if featured_analysis %}
+      <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="h4 fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-danger"></i>Analize</h2>
+          <a href="{% url 'analysis:analysis-list' %}" class="text-muted small">Sve analize &rarr;</a>
+        </div>
+        {% for report in featured_analysis %}{% include "analysis/partials/_analysis_card.html" with compact=True %}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

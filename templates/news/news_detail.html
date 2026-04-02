@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <span class="badge bg-primary mb-2">{{ article.category.name }}</span>
+      <h1 class="h2 fw-bold">{{ article.title }}</h1>
+      <div class="text-muted small mb-4">
+        <i class="bi bi-calendar me-1"></i>{{ article.published_at|date:"d.m.Y H:i" }}
+        {% if article.author %}<span class="ms-3"><i class="bi bi-person me-1"></i>{{ article.author.get_full_name|default:article.author.username }}</span>{% endif %}
+        <span class="ms-3"><i class="bi bi-eye me-1"></i>{{ article.views_count }}</span>
+      </div>
+      {% if article.cover_image %}<img src="{{ article.cover_image.url }}" class="img-fluid rounded mb-4 w-100" style="max-height:400px;object-fit:cover;" alt="{{ article.title }}">{% endif %}
+      <div class="article-body">{{ article.body|safe }}</div>
+    </div>
+    <div class="col-lg-4">
+      {% if related %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Slicne vijesti</h6>
+          {% for a in related %}<div class="mb-3 pb-3 border-bottom"><a href="{{ a.get_absolute_url }}" class="text-decoration-none text-dark small fw-semibold">{{ a.title }}</a></div>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

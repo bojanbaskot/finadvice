@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Kamatne stope banaka BiH &amp; Srbija - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h1 class="h3 fw-bold mb-0"><i class="bi bi-percent me-2"></i>Kamatne stope banaka</h1>
+    <span class="text-muted small">Prikupljeno automatski: <code>python manage.py scrape_rates</code></span>
+  </div>
+  <form method="get" class="d-flex gap-3 mb-4 flex-wrap">
+    <select name="tip" class="form-select form-select-sm w-auto">
+      <option value="">Sve vrste kredita</option>
+      {% for val, label in loan_types %}<option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="zemlja" class="form-select form-select-sm w-auto">
+      <option value="">Sve zemlje</option>
+      {% for code, name in countries %}<option value="{{ code }}" {% if selected_country == code %}selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    <a href="{% url 'calculators:interest-rates' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+  </form>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-light"><tr><th>Banka</th><th>Vrsta kredita</th><th>Kamatna stopa</th><th>EKS</th><th>Tip</th><th>Valuta</th><th>Azurirano</th><th></th></tr></thead>
+      <tbody>
+        {% for rate in rates %}
+        <tr>
+          <td><strong>{{ rate.bank.name }}</strong><span class="badge bg-secondary ms-1">{{ rate.bank.get_country_display }}</span></td>
+          <td>{{ rate.get_loan_type_display }}</td>
+          <td><span class="badge bg-success fs-6">{{ rate.rate }}%</span></td>
+          <td>{% if rate.ert %}<span class="badge bg-warning text-dark">{{ rate.ert }}%</span>{% else %}-{% endif %}</td>
+          <td><span class="badge bg-light text-dark">{{ rate.get_rate_type_display }}</span></td>
+          <td>{{ rate.currency }}</td>
+          <td><small class="text-muted">{% if rate.scraped_at %}{{ rate.scraped_at|date:"d.m.Y" }}{% else %}Rucno{% endif %}</small></td>
+          <td>{% if rate.source_url %}<a href="{{ rate.source_url }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i></a>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-muted py-4">Nema podataka. Pokrenite: <code>python manage.py scrape_rates</code></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="alert alert-light border mt-3"><i class="bi bi-info-circle me-2 text-primary"></i>Podaci su informativnog karaktera. Uvijek se konsultujte sa bankom.</div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+      <i class="bi bi-graph-up-arrow me-1"></i>{{ site_settings.site_name }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-newspaper me-1"></i>Vijesti &amp; Nekretnine
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'news:news-list' %}"><i class="bi bi-rss me-2"></i>Vijesti</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'news:property-list' %}"><i class="bi bi-house me-2"></i>Sve nekretnine</a></li>
+            <li><a class="dropdown-item" href="{% url 'news:property-list' %}?zemlja=BA"><i class="bi bi-geo-alt me-2"></i>BiH</a></li>
+            <li><a class="dropdown-item" href="{% url 'news:property-list' %}?zemlja=RS"><i class="bi bi-geo-alt me-2"></i>Srbija</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'elearning:course-list' %}"><i class="bi bi-mortarboard me-1"></i>Edukacija</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-calculator me-1"></i>Kalkulatori
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'calculators:index' %}"><i class="bi bi-grid me-2"></i>Svi kalkulatori</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:loan' %}"><i class="bi bi-bank me-2"></i>Kredit</a></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:mortgage' %}"><i class="bi bi-house-check me-2"></i>Hipoteka</a></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:investment' %}"><i class="bi bi-graph-up me-2"></i>Investicija</a></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:savings' %}"><i class="bi bi-piggy-bank me-2"></i>Stednja</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:comparison' %}"><i class="bi bi-bar-chart me-2"></i>Poredenje stopa</a></li>
+            <li><a class="dropdown-item" href="{% url 'calculators:interest-rates' %}"><i class="bi bi-percent me-2"></i>Kamatne stope</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'analysis:analysis-list' %}"><i class="bi bi-bar-chart-line me-1"></i>Analize</a>
+        </li>
+      </ul>
+      <form class="d-flex" action="{% url 'core:search' %}" method="get">
+        <div class="input-group">
+          <input class="form-control form-control-sm" type="search" name="q"
+                 placeholder="Pretraga..." value="{{ request.GET.q|default:'' }}">
+          <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</nav>

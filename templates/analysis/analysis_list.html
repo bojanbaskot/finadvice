@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Finansijske analize - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-3 mb-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Kategorije</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="{% url 'analysis:analysis-list' %}" class="text-decoration-none text-dark d-block py-1 border-bottom">Sve analize</a></li>
+            {% for cat in categories %}<li><a href="{{ cat.get_absolute_url }}" class="text-decoration-none text-dark d-block py-1 border-bottom {% if current_category.pk == cat.pk %}fw-bold text-danger{% endif %}">{{ cat.name }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Sektori</h6>
+          <ul class="list-unstyled mb-0">
+            {% for val, label in sectors %}<li><a href="{% url 'analysis:analysis-sector' val %}" class="text-decoration-none text-muted d-block py-1 small {% if current_sector == val %}fw-bold text-danger{% endif %}">{{ label }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9">
+      {% if featured and not current_category and not current_sector %}
+      <div class="mb-4"><h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Istaknute analize</h5>
+      <div class="row g-3">{% for report in featured %}<div class="col-md-4">{% include "analysis/partials/_analysis_card.html" %}</div>{% endfor %}</div></div><hr class="mb-4">
+      {% endif %}
+      <h1 class="h4 fw-bold mb-4">{% if current_category %}{{ current_category.name }}{% elif current_sector %}{{ current_sector }}{% else %}Sve analize{% endif %}</h1>
+      <div class="row g-4">
+        {% for report in reports %}<div class="col-md-4">{% include "analysis/partials/_analysis_card.html" %}</div>
+        {% empty %}<p class="text-muted">Nema objavljenih analiza.</p>
+        {% endfor %}
+      </div>
+      {% include "partials/_pagination.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

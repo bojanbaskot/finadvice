@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Poredenje banaka - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="h3 fw-bold mb-2"><i class="bi bi-bar-chart me-2 text-warning"></i>Poredenje ponuda banaka</h1>
+  <p class="text-muted mb-4">Unesite iznos i rok - prikazujemo sve dostupne ponude sortirane po najnizoj rati.</p>
+  <form method="post" class="card border-0 shadow-sm p-4 mb-5">
+    {% csrf_token %}
+    <div class="row g-3 align-items-end">
+      {% for field in form %}<div class="col-md-3"><label class="form-label fw-semibold">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+      <div class="col-md-1"><button type="submit" class="btn btn-warning text-white w-100 fw-bold">Poredi</button></div>
+    </div>
+  </form>
+  {% if results %}
+  <h5 class="fw-bold mb-3">Rezultati - sortirano po najnizoj rati</h5>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark"><tr><th>#</th><th>Banka</th><th>Kamatna stopa</th><th>Mjescna rata</th><th>Ukupno platiti</th><th>Ukupna kamata</th></tr></thead>
+      <tbody>
+        {% for r in results %}
+        <tr {% if forloop.first %}class="table-success"{% endif %}>
+          <td>{% if forloop.first %}<i class="bi bi-trophy-fill text-warning"></i>{% else %}{{ forloop.counter }}{% endif %}</td>
+          <td class="fw-semibold">{{ r.name }}</td><td>{{ r.rate }}%</td>
+          <td><strong>{{ r.monthly_payment|floatformat:2 }} BAM</strong></td>
+          <td>{{ r.total_payment|floatformat:0 }} BAM</td>
+          <td class="text-danger">{{ r.total_interest|floatformat:0 }} BAM</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <canvas id="compChart" height="120" class="mt-4"></canvas>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{% if results %}
+<script>
+new Chart(document.getElementById('compChart'),{type:'bar',data:{
+  labels:[{% for r in results %}'{{ r.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+  datasets:[
+    {label:'Rata (BAM)',data:[{% for r in results %}{{ r.monthly_payment }}{% if not forloop.last %},{% endif %}{% endfor %}],backgroundColor:'rgba(13,110,253,0.7)'},
+    {label:'Ukupna kamata',data:[{% for r in results %}{{ r.total_interest }}{% if not forloop.last %},{% endif %}{% endfor %}],backgroundColor:'rgba(220,53,69,0.5)'}
+  ]},options:{responsive:true}});
+</script>{% endif %}{% endblock %}

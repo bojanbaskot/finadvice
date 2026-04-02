@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} - {{ course.title }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <h1 class="h2 fw-bold">{{ lesson.title }}</h1>
+      {% if lesson.content_type == 'video' and lesson.video_url %}
+      <div class="ratio ratio-16x9 mb-4"><iframe src="{{ lesson.video_url }}" allowfullscreen></iframe></div>
+      {% endif %}
+      {% if lesson.body %}<div class="lesson-body">{{ lesson.body|safe }}</div>{% endif %}
+      {% if lesson.pdf_file %}<a href="{{ lesson.pdf_file.url }}" class="btn btn-outline-danger mt-3" download><i class="bi bi-file-pdf me-2"></i>Preuzmi PDF</a>{% endif %}
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold">Sadrzaj</h6>
+          {% for module in modules %}
+          <div class="mb-2">
+            <small class="text-muted text-uppercase fw-bold">{{ module.title }}</small>
+            {% for l in module.lessons.all %}
+            <a href="{{ l.get_absolute_url }}" class="d-block py-1 small text-decoration-none {% if l.pk == lesson.pk %}text-primary fw-bold{% else %}text-dark{% endif %}">{{ l.title }}</a>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

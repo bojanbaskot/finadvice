@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Nekretnine BiH &amp; Srbija - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="h3 fw-bold mb-4"><i class="bi bi-house me-2"></i>Nekretnine</h1>
+  <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Tip</label>
+        <select name="tip" class="form-select form-select-sm">
+          <option value="">Sve</option>
+          <option value="sale" {% if request.GET.tip == 'sale' %}selected{% endif %}>Prodaja</option>
+          <option value="rent" {% if request.GET.tip == 'rent' %}selected{% endif %}>Iznajmljivanje</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Zemlja</label>
+        <select name="zemlja" class="form-select form-select-sm">
+          <option value="">Sve</option>
+          {% for code, name in countries %}<option value="{{ code }}" {% if request.GET.zemlja == code %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-bold">Grad</label>
+        <input type="text" name="grad" class="form-control form-control-sm" value="{{ request.GET.grad|default:'' }}" placeholder="Sarajevo...">
+      </div>
+      <div class="col-md-2"><label class="form-label small fw-bold">Min cijena</label><input type="number" name="min_cijena" class="form-control form-control-sm" value="{{ request.GET.min_cijena|default:'' }}"></div>
+      <div class="col-md-2"><label class="form-label small fw-bold">Max cijena</label><input type="number" name="max_cijena" class="form-control form-control-sm" value="{{ request.GET.max_cijena|default:'' }}"></div>
+      <div class="col-md-1"><button type="submit" class="btn btn-primary btn-sm w-100">Filter</button></div>
+    </div>
+  </form>
+  <div class="row g-4">
+    {% for property in properties %}
+    <div class="col-md-4 col-lg-3">{% include "news/partials/_property_card.html" %}</div>
+    {% empty %}<p class="text-muted">Nema dostupnih nekretnina.</p>
+    {% endfor %}
+  </div>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}

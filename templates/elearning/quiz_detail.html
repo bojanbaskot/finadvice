@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="col-lg-8 mx-auto">
+    <h1 class="h2 fw-bold mb-2">{{ quiz.title }}</h1>
+    <p class="text-muted mb-4">Prolaz: {{ quiz.pass_score }}%</p>
+    <form method="post" action="{% url 'elearning:quiz-submit' quiz.pk %}">
+      {% csrf_token %}
+      {% for question in questions %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <p class="fw-semibold mb-3">{{ forloop.counter }}. {{ question.text }}</p>
+          {% for answer in question.answers.all %}
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="{% if question.qtype == 'multi' %}checkbox{% else %}radio{% endif %}" name="q_{{ question.pk }}" value="{{ answer.pk }}" id="a_{{ answer.pk }}">
+            <label class="form-check-label" for="a_{{ answer.pk }}">{{ answer.text }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-2"></i>Predaj odgovore</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

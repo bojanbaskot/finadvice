@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Stednja kalkulator - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-5">
+      <h1 class="h3 fw-bold mb-4"><i class="bi bi-piggy-bank me-2 text-info"></i>Cilj stednje</h1>
+      <div class="card border-0 shadow-sm"><div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          {% for field in form %}<div class="mb-3"><label class="form-label fw-semibold">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+          <button type="submit" class="btn btn-info text-white w-100 btn-lg"><i class="bi bi-calculator me-2"></i>Izracunaj</button>
+        </form>
+      </div></div>
+    </div>
+    {% if results %}
+    <div class="col-lg-7 d-flex align-items-center">
+      <div class="w-100">
+        {% if results.achievable %}
+        <div class="card border-0 bg-success text-white p-4 mb-4 rounded-3 text-center">
+          <i class="bi bi-check-circle fs-1 mb-2"></i>
+          <h3 class="fw-bold">Cilj dostizno!</h3>
+          <p class="mb-0 fs-5">Za <strong>{{ results.months_to_goal }} mjeseci</strong> ({{ results.years }} godina)</p>
+        </div>
+        {% else %}
+        <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Cilj nije dostizno uz ove parametre.</div>
+        {% endif %}
+        <div class="row g-3">
+          <div class="col-md-6"><div class="card border-0 bg-light p-3 text-center"><small class="text-muted">Ukupno uplaceno</small><div class="fw-bold fs-5">{{ results.total_contributions|floatformat:0 }} BAM</div></div></div>
+          <div class="col-md-6"><div class="card border-0 bg-light p-3 text-center"><small class="text-muted">Zarada od kamata</small><div class="fw-bold fs-5 text-success">{{ results.interest_earned|floatformat:0 }} BAM</div></div></div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

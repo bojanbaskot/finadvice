@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <h1 class="h2 fw-bold">{{ course.title }}</h1>
+      {% if course.subtitle %}<p class="lead text-muted">{{ course.subtitle }}</p>{% endif %}
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <span class="badge" style="background-color:{{ course.category.color }}">{{ course.category.name }}</span>
+        <span class="badge bg-light text-dark">{{ course.get_level_display }}</span>
+        {% if course.is_free %}<span class="badge bg-success">Besplatno</span>{% endif %}
+      </div>
+      <div>{{ course.description|safe }}</div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">Sadrzaj kursa</h5>
+          {% for module in modules %}
+          <div class="mb-3">
+            <div class="fw-semibold text-muted small text-uppercase">{{ module.title }}</div>
+            <ul class="list-unstyled ms-2 mt-1">
+              {% for lesson in module.lessons.all %}
+              <li class="py-1 border-bottom">
+                <a href="{{ lesson.get_absolute_url }}" class="text-decoration-none text-dark small">
+                  <i class="bi bi-{% if lesson.content_type == 'video' %}play-circle{% elif lesson.content_type == 'pdf' %}file-pdf{% else %}file-text{% endif %} me-1 text-muted"></i>{{ lesson.title }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+          {% if quizzes %}<hr>{% for quiz in quizzes %}<a href="{% url 'elearning:quiz' quiz.pk %}" class="btn btn-outline-primary btn-sm w-100 mb-2"><i class="bi bi-question-circle me-1"></i>{{ quiz.title }}</a>{% endfor %}{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

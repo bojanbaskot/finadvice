@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Finansijski kalkulatori - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="h3 fw-bold mb-2"><i class="bi bi-calculator me-2 text-warning"></i>Finansijski kalkulatori</h1>
+  <p class="text-muted mb-5">Sve sto vam treba za finansijsko planiranje.</p>
+  <div class="row g-4 mb-5">
+    <div class="col-md-4"><a href="{% url 'calculators:loan' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-bank text-primary fs-1 mb-3"></i><h5>Kredit kalkulator</h5><p class="text-muted small">Izracunajte mjesecni anuitet i plan otplate.</p></div></a></div>
+    <div class="col-md-4"><a href="{% url 'calculators:mortgage' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-house-check text-success fs-1 mb-3"></i><h5>Hipoteka</h5><p class="text-muted small">Stambeni kredit sa ucesce i LTV omjerom.</p></div></a></div>
+    <div class="col-md-4"><a href="{% url 'calculators:investment' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-graph-up text-danger fs-1 mb-3"></i><h5>Investicija</h5><p class="text-muted small">Slozena kamata sa redovnim ulogom.</p></div></a></div>
+    <div class="col-md-4"><a href="{% url 'calculators:savings' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-piggy-bank text-info fs-1 mb-3"></i><h5>Cilj stednje</h5><p class="text-muted small">Za koliko vremena dostici zelj iznos stednje.</p></div></a></div>
+    <div class="col-md-4"><a href="{% url 'calculators:comparison' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-bar-chart text-warning fs-1 mb-3"></i><h5>Poredenje banaka</h5><p class="text-muted small">Uporedite ponude banaka iz BiH i Srbije.</p></div></a></div>
+    <div class="col-md-4"><a href="{% url 'calculators:interest-rates' %}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100 text-center p-4"><i class="bi bi-percent text-secondary fs-1 mb-3"></i><h5>Kamatne stope</h5><p class="text-muted small">Aktuelne kamatne stope banaka.</p></div></a></div>
+  </div>
+  {% if latest_rates %}
+  <h4 class="fw-bold mb-3">Najnize kamatne stope danas</h4>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light"><tr><th>Banka</th><th>Zemlja</th><th>Vrsta kredita</th><th>Kamatna stopa</th><th>EKS</th><th></th></tr></thead>
+      <tbody>
+        {% for rate in latest_rates %}
+        <tr>
+          <td class="fw-semibold">{{ rate.bank.name }}</td>
+          <td><span class="badge bg-secondary">{{ rate.bank.get_country_display }}</span></td>
+          <td>{{ rate.get_loan_type_display }}</td>
+          <td><strong class="text-success">{{ rate.rate }}%</strong></td>
+          <td>{% if rate.ert %}{{ rate.ert }}%{% else %}-{% endif %}</td>
+          <td>{% if rate.source_url %}<a href="{{ rate.source_url }}" target="_blank" class="btn btn-outline-primary btn-sm">Ponuda</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

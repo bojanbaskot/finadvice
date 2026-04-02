@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}E-Learning - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="h3 fw-bold mb-2"><i class="bi bi-mortarboard me-2 text-success"></i>Finansijska edukacija</h1>
+  <p class="text-muted mb-4">Naucite osnove i napredne koncepte finansija.</p>
+  <form method="get" class="d-flex gap-3 mb-4 flex-wrap">
+    <select name="kategorija" class="form-select form-select-sm w-auto">
+      <option value="">Sve kategorije</option>
+      {% for cat in categories %}<option value="{{ cat.slug }}" {% if request.GET.kategorija == cat.slug %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+    </select>
+    <select name="nivo" class="form-select form-select-sm w-auto">
+      <option value="">Svi nivoi</option>
+      {% for val, label in levels %}<option value="{{ val }}" {% if request.GET.nivo == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+  </form>
+  <div class="row g-4">
+    {% for course in courses %}
+    <div class="col-md-4">{% include "elearning/partials/_course_card.html" %}</div>
+    {% empty %}<p class="text-muted">Nema dostupnih kurseva.</p>
+    {% endfor %}
+  </div>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}
