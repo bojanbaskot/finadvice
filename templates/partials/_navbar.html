@@ -1,8 +1,8 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm border-bottom">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
-      <i class="bi bi-graph-up-arrow me-1"></i>{{ site_settings.site_name }}
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'core:home' %}">
+      <img src="{% static 'img/logo.svg' %}" alt="Anfinit" height="40" class="me-1">
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
       <span class="navbar-toggler-icon"></span>
@@ -48,7 +48,7 @@
         <div class="input-group">
           <input class="form-control form-control-sm" type="search" name="q"
                  placeholder="Pretraga..." value="{{ request.GET.q|default:'' }}">
-          <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+          <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-search"></i></button>
         </div>
       </form>
     </div>
