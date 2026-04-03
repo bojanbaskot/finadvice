@@ -160,6 +160,95 @@ class SparkasseBHScraper:
 
 
 # ---------------------------------------------------------------------------
+# Additional BiH scrapers
+# ---------------------------------------------------------------------------
+
+class IntesaBHScraper:
+    BANK_SHORT = 'intesa-bh'
+    # Rate overview page lists all products with actual percentages
+    URLS = [
+        ('https://www.intesasanpaolobanka.ba/stanovnistvo/krediti/pregled-kamatnih-stopa.html', 'stambeni', 'BAM'),
+        ('https://www.intesasanpaolobanka.ba/stanovnistvo/krediti/pregled-kamatnih-stopa.html', 'gotovinski', 'BAM'),
+    ]
+    def scrape(self):
+        # This page has a full rate table — scrape once and extract multiple
+        soup = _get('https://www.intesasanpaolobanka.ba/stanovnistvo/krediti/pregled-kamatnih-stopa.html')
+        if not soup:
+            return []
+        offers = []
+        full_text = soup.get_text(' ', strip=True).replace(',', '.').replace('\xa0', '')
+        pairs = [
+            ('stambeni', r'[Ss]tambeni.{0,80}?(\d{1,2}\.\d{1,4})%'),
+            ('gotovinski', r'[Nn]enamjenski|[Gg]otovinski.{0,80}?(\d{1,2}\.\d{1,4})%'),
+            ('auto', r'[Aa]uto.{0,80}?(\d{1,2}\.\d{1,4})%'),
+            ('penzionerski', r'[Pp]enzion.{0,80}?(\d{1,2}\.\d{1,4})%'),
+        ]
+        import re as _re
+        seen = set()
+        for m in _re.finditer(r'(\d{1,2}\.\d{1,4})%', full_text):
+            val = float(m.group(1))
+            if 0.5 < val < 30 and val not in seen:
+                seen.add(val)
+                # assign loan type based on position/context
+                start = max(0, m.start() - 60)
+                ctx = full_text[start:m.start()].lower()
+                if 'stambeni' in ctx or 'housing' in ctx:
+                    lt = 'stambeni'
+                elif 'auto' in ctx:
+                    lt = 'auto'
+                elif 'penzion' in ctx:
+                    lt = 'penzionerski'
+                else:
+                    lt = 'gotovinski'
+                offers.append(_make_offer(lt, val, 'https://www.intesasanpaolobanka.ba/stanovnistvo/krediti/pregled-kamatnih-stopa.html', currency='BAM'))
+                if len(offers) >= 5:
+                    break
+        return offers
+
+
+class AtasBHScraper:
+    BANK_SHORT = 'atos-rs-ba'
+    URLS = [
+        ('https://www.atosbank.ba/content/read/hipotekarni-kredit', 'stambeni', 'BAM'),
+        ('https://www.atosbank.ba/content/read/super-akcija-krediti', 'gotovinski', 'BAM'),
+        ('https://www.atosbank.ba/content/read/auto-kredit', 'auto', 'BAM'),
+    ]
+    def scrape(self):
+        return [o for o in (_scrape_rates_from_page(u, t, c) for u, t, c in self.URLS) if o]
+
+
+class NovaBankaScraper:
+    BANK_SHORT = 'nova-banka'
+    URLS = [
+        ('https://www.novabanka.com/sr/stranica/121/stanovnistvo/krediti/stambeni-i-hipotekarni-krediti/stambeni-krediti-iz-sredstava-banke', 'stambeni', 'BAM'),
+        ('https://www.novabanka.com/sr/stranica/114/stanovnistvo/krediti/gotovinski-krediti/gotovinski-krediti-za-zaposlene', 'gotovinski', 'BAM'),
+    ]
+    def scrape(self):
+        return [o for o in (_scrape_rates_from_page(u, t, c) for u, t, c in self.URLS) if o]
+
+
+class ASABankaScraper:
+    BANK_SHORT = 'asa-bh'
+    URLS = [
+        ('https://www.asabanka.ba/stambeni-kredit/', 'stambeni', 'BAM'),
+        ('https://www.asabanka.ba/nenamjenski-krediti/', 'gotovinski', 'BAM'),
+        ('https://www.asabanka.ba/kredit-za-penzionere-umirovljenike/', 'penzionerski', 'BAM'),
+    ]
+    def scrape(self):
+        return [o for o in (_scrape_rates_from_page(u, t, c) for u, t, c in self.URLS) if o]
+
+
+class ProCreditBHScraper:
+    BANK_SHORT = 'procredit-bh'
+    URLS = [
+        ('https://www.procreditbank.ba/retail/krediti/stambeni-kredit', 'stambeni', 'BAM'),
+        ('https://www.procreditbank.ba/retail/krediti/kredit-za-domacinstv', 'gotovinski', 'BAM'),
+    ]
+    def scrape(self):
+        return [o for o in (_scrape_rates_from_page(u, t, c) for u, t, c in self.URLS) if o]
+
+
+# ---------------------------------------------------------------------------
 # Serbian scrapers
 # ---------------------------------------------------------------------------
 
@@ -207,6 +296,11 @@ SCRAPER_MAP = {
     'raiffeisen-bh': RaiffeisenBHScraper,
     'nlb-bh': NLBBHScraper,
     'sparkasse-bh': SparkasseBHScraper,
+    'intesa-bh': IntesaBHScraper,
+    'atos-rs-ba': AtasBHScraper,
+    'nova-banka': NovaBankaScraper,
+    'asa-bh': ASABankaScraper,
+    'procredit-bh': ProCreditBHScraper,
     'raiffeisen-rs': RaiffeisenSRBScraper,
     'otp-rs': OTPBankSRBScraper,
 }
