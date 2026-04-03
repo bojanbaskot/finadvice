@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'ckeditor',
     'ckeditor_uploader',
+    'django_apscheduler',
     # Local apps
     'apps.core',
     'apps.news',
