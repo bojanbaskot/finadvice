@@ -1,13 +1,6 @@
 """
 Interest rate scraper for BiH and Serbian banks.
 
-Each scraper class implements scrape() returning a list of dicts:
-  {loan_type, rate, rate_type, ert, min_amount, max_amount,
-   min_term_months, max_term_months, currency, notes, source_url}
-
-Banks covered (BiH): UniCredit BH, Raiffeisen BH, NLB BH, Sparkasse BH
-Banks covered (SRB): Raiffeisen RS, OTP Bank RS
-
 Run via: python manage.py scrape_rates
 """
 import re
@@ -25,61 +18,72 @@ HEADERS = {
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/124.0.0.0 Safari/537.36'
     ),
-    'Accept-Language': 'bs,hr;q=0.9,en;q=0.8',
+    'Accept-Language': 'bs,hr;q=0.9,sr;q=0.8,en;q=0.7',
 }
-TIMEOUT = 15
+TIMEOUT = 20
 
 
 def _get(url):
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT, verify=False)
         resp.raise_for_status()
+        resp.encoding = 'utf-8'
         return BeautifulSoup(resp.text, 'lxml')
     except Exception as exc:
         logger.warning('GET %s failed: %s', url, exc)
         return None
 
 
-def _extract_rate(text):
-    """Extract first decimal number, e.g. '4,50%' -> 4.5"""
-    if not text:
-        return None
-    cleaned = text.replace(',', '.').replace('\xa0', '')
-    match = re.search(r'(\d{1,2}\.\d{1,4})', cleaned)
-    if match:
-        try:
-            val = float(match.group(1))
-            if 0.5 < val < 30:
-                return val
-        except ValueError:
-            pass
-    return None
-
 
 def _extract_ert(text):
-    match = re.search(r'EKS[^\d]*(\d+[,\.]\d+)', text, re.IGNORECASE)
+    """Extract EKS/ERT (effective interest rate) from text."""
+    if not text:
+        return None
+    cleaned = text.replace(',', '.')
+    match = re.search(r'EKS[^\d]*(\d+\.\d+)', cleaned, re.IGNORECASE)
     if match:
         try:
-            return float(match.group(1).replace(',', '.'))
+            return float(match.group(1))
         except ValueError:
             pass
     return None
 
 
-def _make_offer(loan_type, rate, source_url, text='', currency='BAM'):
+def _make_offer(loan_type, rate, source_url, text='', currency='BAM', ert=None):
     return {
         'loan_type': loan_type,
         'rate': rate,
         'rate_type': 'fixed',
-        'ert': _extract_ert(text),
+        'ert': ert or _extract_ert(text),
         'min_amount': None,
         'max_amount': None,
         'min_term_months': None,
         'max_term_months': None,
         'currency': currency,
-        'notes': text[:250],
+        'notes': text[:250] if text else '',
         'source_url': source_url,
     }
+
+
+def _scrape_rates_from_page(url, loan_type, currency='BAM'):
+    """Generic scraper: fetch page, find all % values, return first valid rate."""
+    soup = _get(url)
+    if not soup:
+        return None
+
+    full_text = soup.get_text(' ', strip=True)
+    # Find all percentage values in the page
+    cleaned = full_text.replace(',', '.').replace('\xa0', '')
+    matches = re.findall(r'(\d{1,2}\.\d{1,4})%', cleaned)
+    for m in matches:
+        try:
+            val = float(m)
+            if 0.5 < val < 30:
+                ert = _extract_ert(full_text)
+                return _make_offer(loan_type, val, url, full_text[:250], currency, ert)
+        except ValueError:
+            pass
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -90,23 +94,17 @@ class UniCreditBHScraper:
     BANK_SHORT = 'unicredit-bh'
 
     URLS = [
-        ('https://www.unicreditbank.ba/stanovnistvo/krediti/stambeni-kredit/', 'housing'),
-        ('https://www.unicreditbank.ba/stanovnistvo/krediti/gotovinski-kredit/', 'consumer'),
-        ('https://www.unicreditbank.ba/stanovnistvo/krediti/auto-kredit/', 'auto'),
+        ('https://www.unicreditbank.ba/home/wps/wcm/connect/ucb_ba/public/retail/loans/housing/', 'stambeni', 'BAM'),
+        ('https://www.unicreditbank.ba/home/wps/wcm/connect/ucb_ba/public/retail/loans/cash/', 'gotovinski', 'BAM'),
+        ('https://www.unicreditbank.ba/home/wps/wcm/connect/ucb_ba/public/retail/loans/auto/', 'auto', 'BAM'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .rate, [class*="kamat"], [class*="interest"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -114,22 +112,16 @@ class RaiffeisenBHScraper:
     BANK_SHORT = 'raiffeisen-bh'
 
     URLS = [
-        ('https://www.raiffeisenbank.ba/bs/stanovnistvo/krediti/stambeni-krediti/', 'housing'),
-        ('https://www.raiffeisenbank.ba/bs/stanovnistvo/krediti/gotovinski-krediti/', 'consumer'),
+        ('https://www.raiffeisenbank.ba/bs/stanovnistvo/proizvodi/krediti/stambeni-krediti.html', 'stambeni', 'BAM'),
+        ('https://www.raiffeisenbank.ba/bs/stanovnistvo/proizvodi/krediti/nenamjenski-kredit.html', 'gotovinski', 'BAM'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .product-detail, [class*="rate"], [class*="kamat"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -137,22 +129,16 @@ class NLBBHScraper:
     BANK_SHORT = 'nlb-bh'
 
     URLS = [
-        ('https://www.nlbbanka.ba/stanovnistvo/stambeni-krediti/', 'housing'),
-        ('https://www.nlbbanka.ba/stanovnistvo/potrosacki-krediti/', 'consumer'),
+        ('https://www.nlb.ba/bs/stanovnistvo/krediti/stambeni-kredit.html', 'stambeni', 'BAM'),
+        ('https://www.nlb.ba/bs/stanovnistvo/krediti/gotovinski-kredit.html', 'gotovinski', 'BAM'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .credit-info, [class*="kamat"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -160,22 +146,16 @@ class SparkasseBHScraper:
     BANK_SHORT = 'sparkasse-bh'
 
     URLS = [
-        ('https://www.sparkasse.ba/stanovnistvo/krediti/stambeni-kredit/', 'housing'),
-        ('https://www.sparkasse.ba/stanovnistvo/krediti/gotovinski-kredit/', 'consumer'),
+        ('https://www.sparkasse.ba/bs/stanovnistvo/krediti/krediti-bez-namjene/Akcijska-ponuda-kredita', 'gotovinski', 'BAM'),
+        ('https://www.sparkasse.ba/bs/stanovnistvo/krediti/krediti-bez-namjene/nenamjenski-krediti-za-penzionere', 'penzionerski', 'BAM'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .kamatna-stopa, [class*="interest"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -187,22 +167,16 @@ class RaiffeisenSRBScraper:
     BANK_SHORT = 'raiffeisen-rs'
 
     URLS = [
-        ('https://www.raiffeisenbank.rs/stanovnistvo/krediti/stambeni-krediti/', 'housing'),
-        ('https://www.raiffeisenbank.rs/stanovnistvo/krediti/gotovinski-krediti/', 'consumer'),
+        ('https://www.raiffeisenbank.rs/sr/stanovnistvo/krediti/stambeni-kredit.html', 'stambeni', 'RSD'),
+        ('https://www.raiffeisenbank.rs/sr/stanovnistvo/krediti/kes-kredit.html', 'gotovinski', 'RSD'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .rate-box, [class*="kamat"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text, currency='RSD'))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -210,23 +184,17 @@ class OTPBankSRBScraper:
     BANK_SHORT = 'otp-rs'
 
     URLS = [
-        ('https://www.otpbanka.rs/stanovnistvo/krediti/stambeni-krediti/', 'housing'),
-        ('https://www.otpbanka.rs/stanovnistvo/krediti/gotovinski-krediti/', 'consumer'),
-        ('https://www.otpbanka.rs/stanovnistvo/krediti/auto-krediti/', 'auto'),
+        ('https://www.otpbanka.rs/stanovnistvo/stambeni-krediti/', 'stambeni', 'RSD'),
+        ('https://www.otpbanka.rs/stanovnistvo/ponuda-kes-kredita/', 'gotovinski', 'RSD'),
+        ('https://www.otpbanka.rs/stanovnistvo/potrosacki-krediti/potrosacki-kredit-na-licu-mesta/', 'potrosacki', 'RSD'),
     ]
 
     def scrape(self):
         offers = []
-        for url, loan_type in self.URLS:
-            soup = _get(url)
-            if not soup:
-                continue
-            for el in soup.select('table tr, .credit-rate, [class*="kamat"]'):
-                text = el.get_text(' ', strip=True)
-                rate = _extract_rate(text)
-                if rate:
-                    offers.append(_make_offer(loan_type, rate, url, text, currency='RSD'))
-                    break
+        for url, loan_type, currency in self.URLS:
+            offer = _scrape_rates_from_page(url, loan_type, currency)
+            if offer:
+                offers.append(offer)
         return offers
 
 
@@ -264,10 +232,10 @@ def run_scraper_for_bank(bank_obj):
             InterestRateOffer.objects.update_or_create(
                 bank=bank_obj,
                 loan_type=offer_data['loan_type'],
-                rate_type=offer_data.get('rate_type', 'fixed'),
                 currency=offer_data.get('currency', 'BAM'),
                 defaults={
                     'rate': offer_data['rate'],
+                    'rate_type': offer_data.get('rate_type', 'fixed'),
                     'ert': offer_data.get('ert'),
                     'min_amount': offer_data.get('min_amount'),
                     'max_amount': offer_data.get('max_amount'),
