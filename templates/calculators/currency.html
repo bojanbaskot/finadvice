@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Kalkulator valuta - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-currency-exchange me-2 text-warning"></i>Kalkulator valuta</h1>
+      <p class="text-muted mb-4">Konverzija između BAM, EUR, USD, RSD i CHF</p>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Iznos</label>
+              {{ form.amount }}
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Iz valute</label>
+                {{ form.from_currency }}
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">U valutu</label>
+                {{ form.to_currency }}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning w-100 btn-lg fw-bold">
+              <i class="bi bi-arrow-left-right me-2"></i>Konvertuj
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {% if result %}
+      <div class="card border-0 bg-warning bg-opacity-10 border-warning mb-4">
+        <div class="card-body p-4 text-center">
+          <div class="fs-2 fw-bold mb-1">
+            {{ result.amount|floatformat:2|intcomma }} {{ result.from }}
+            <span class="text-muted fs-4 mx-2">=</span>
+            <span class="text-warning">{{ result.result|floatformat:2|intcomma }} {{ result.to }}</span>
+          </div>
+          <small class="text-muted">Kurs: 1 {{ result.from }} = {{ result.rate }} {{ result.to }}</small>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- BAM reference table -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pb-0">
+          <h6 class="fw-bold mb-0"><i class="bi bi-table me-1 text-primary"></i>Referentni kursevi (BAM baza)</h6>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Par</th><th class="text-end">Kurs</th><th class="text-end">1 BAM =</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>BAM/EUR</strong></td><td class="text-end">0.511292</td><td class="text-end text-success fw-semibold">0.5113 EUR</td></tr>
+              <tr><td><strong>BAM/USD</strong></td><td class="text-end">≈ 0.558</td><td class="text-end text-success fw-semibold">≈ 0.558 USD</td></tr>
+              <tr><td><strong>BAM/RSD</strong></td><td class="text-end">≈ 59.5</td><td class="text-end text-success fw-semibold">≈ 59.5 RSD</td></tr>
+              <tr><td><strong>BAM/CHF</strong></td><td class="text-end">≈ 0.496</td><td class="text-end text-success fw-semibold">≈ 0.496 CHF</td></tr>
+              <tr class="table-info"><td colspan="3" class="small text-center py-2">
+                <i class="bi bi-pin-fill me-1"></i>BAM je fiksno vezan za EUR: <strong>1 EUR = 1.95583 BAM</strong>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="alert alert-light border mt-3 small text-muted">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        Kursevi su orijentacijski i ažuriraju se periodično. Za zvanične kurseve posjetite <a href="https://www.cbbh.ba" target="_blank">CBBH</a> ili <a href="https://www.nbs.rs" target="_blank">NBS</a>.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

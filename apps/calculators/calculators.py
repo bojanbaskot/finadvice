@@ -127,6 +127,90 @@ def calculate_savings_goal(target_amount, current_savings, annual_rate_pct, mont
     }
 
 
+def calculate_deposit(principal, annual_rate_pct, term_months, compound='monthly'):
+    """Fixed-term deposit (oročena štednja). Returns final amount, interest earned, and monthly breakdown."""
+    principal = float(principal)
+    rate = float(annual_rate_pct) / 100
+    n = int(term_months)
+
+    if compound == 'monthly':
+        r = rate / 12
+        final = principal * (1 + r) ** n
+    elif compound == 'quarterly':
+        r = rate / 4
+        quarters = n / 3
+        final = principal * (1 + r) ** quarters
+    else:  # annual or at_maturity
+        years = n / 12
+        final = principal * (1 + rate) ** years
+
+    interest = final - principal
+
+    # Monthly breakdown
+    breakdown = []
+    balance = principal
+    r_monthly = rate / 12
+    for i in range(1, n + 1):
+        interest_this_month = balance * r_monthly
+        if compound == 'monthly':
+            balance += interest_this_month
+        breakdown.append({
+            'month': i,
+            'balance': _round2(balance if compound == 'monthly' else principal + interest * (i / n)),
+            'interest_earned': _round2(interest_this_month),
+        })
+
+    return {
+        'final_amount': _round2(final),
+        'interest_earned': _round2(interest),
+        'principal': _round2(principal),
+        'monthly_breakdown': breakdown,
+        'effective_rate': _round2((final / principal - 1) * 100),
+    }
+
+
+# BAM is pegged to EUR at fixed rate: 1 EUR = 1.95583 BAM
+CURRENCY_RATES = {
+    ('BAM', 'EUR'): 1 / 1.95583,
+    ('EUR', 'BAM'): 1.95583,
+    ('BAM', 'USD'): 1 / 1.95583 * 1.09,   # approx via EUR
+    ('USD', 'BAM'): 1.95583 / 1.09,
+    ('BAM', 'RSD'): 59.5,                   # approx 1 BAM ≈ 59.5 RSD
+    ('RSD', 'BAM'): 1 / 59.5,
+    ('EUR', 'USD'): 1.09,
+    ('USD', 'EUR'): 1 / 1.09,
+    ('EUR', 'RSD'): 117.0,
+    ('RSD', 'EUR'): 1 / 117.0,
+    ('USD', 'RSD'): 107.3,
+    ('RSD', 'USD'): 1 / 107.3,
+    ('BAM', 'CHF'): 1 / 1.95583 * 0.97,
+    ('CHF', 'BAM'): 1.95583 / 0.97,
+    ('EUR', 'CHF'): 0.97,
+    ('CHF', 'EUR'): 1 / 0.97,
+}
+
+
+def convert_currency(amount, from_currency, to_currency):
+    """Convert between currencies. Returns converted amount and rate used."""
+    amount = float(amount)
+    if from_currency == to_currency:
+        return {'result': _round2(amount), 'rate': 1.0, 'from': from_currency, 'to': to_currency}
+    rate = CURRENCY_RATES.get((from_currency, to_currency))
+    if rate is None:
+        # Try reverse
+        rev = CURRENCY_RATES.get((to_currency, from_currency))
+        rate = 1 / rev if rev else None
+    if rate is None:
+        return None
+    return {
+        'result': _round2(amount * rate),
+        'rate': round(rate, 6),
+        'from': from_currency,
+        'to': to_currency,
+        'amount': _round2(amount),
+    }
+
+
 def compare_loan_offers(principal, term_months, offers):
     """Compare multiple bank offers sorted by monthly_payment."""
     results = []

@@ -24,11 +24,13 @@ class Bank(TimeStampedModel):
 
 class InterestRateOffer(TimeStampedModel):
     LOAN_TYPE_CHOICES = [
-        ('housing', 'Housing / Mortgage Loan'),
-        ('consumer', 'Consumer Loan'),
-        ('auto', 'Auto Loan'),
-        ('business', 'Business Loan'),
-        ('refinancing', 'Refinancing'),
+        ('stambeni', 'Stambeni kredit'),
+        ('gotovinski', 'Gotovinski kredit'),
+        ('auto', 'Auto kredit'),
+        ('penzionerski', 'Penzionerski kredit'),
+        ('potrosacki', 'Potrošački kredit'),
+        ('refinansiranje', 'Refinansiranje'),
+        ('poslovni', 'Poslovni kredit'),
     ]
     RATE_TYPE_CHOICES = [('fixed', 'Fixed'), ('variable', 'Variable'), ('mixed', 'Fixed+Variable')]
 

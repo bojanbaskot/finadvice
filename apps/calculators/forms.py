@@ -85,9 +85,62 @@ class LoanComparisonForm(forms.Form):
     loan_type = forms.ChoiceField(
         label='Vrsta kredita',
         choices=[
-            ('housing', 'Stambeni kredit'),
-            ('consumer', 'Potrošački kredit'),
+            ('stambeni', 'Stambeni kredit'),
+            ('gotovinski', 'Gotovinski kredit'),
             ('auto', 'Auto kredit'),
+            ('penzionerski', 'Penzionerski kredit'),
+            ('refinansiranje', 'Refinansiranje'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+
+
+class DepositCalculatorForm(forms.Form):
+    COMPOUND_CHOICES = [
+        ('monthly', 'Mjesečno (složena)'),
+        ('quarterly', 'Kvartalno'),
+        ('annual', 'Godišnje'),
+        ('at_maturity', 'Po isteku roka'),
+    ]
+    principal = forms.DecimalField(
+        label='Iznos depozita (BAM)', min_value=100, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '10000'})
+    )
+    annual_rate = forms.DecimalField(
+        label='Godišnja kamatna stopa (%)', min_value=0.01, max_value=20, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '3.5', 'step': '0.01'})
+    )
+    term_months = forms.IntegerField(
+        label='Rok oročenja (mjeseci)', min_value=1, max_value=120,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '12'})
+    )
+    compound = forms.ChoiceField(
+        label='Način obračuna kamate', choices=COMPOUND_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+
+class CurrencyConverterForm(forms.Form):
+    CURRENCIES = [
+        ('BAM', 'BAM — Konvertibilna marka'),
+        ('EUR', 'EUR — Euro'),
+        ('USD', 'USD — Američki dolar'),
+        ('RSD', 'RSD — Srpski dinar'),
+        ('CHF', 'CHF — Švicarski franak'),
+    ]
+    amount = forms.DecimalField(
+        label='Iznos', min_value=0.01, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-lg', 'placeholder': '1000'})
+    )
+    from_currency = forms.ChoiceField(
+        label='Iz valute', choices=CURRENCIES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    to_currency = forms.ChoiceField(
+        label='U valutu', choices=CURRENCIES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['to_currency'].initial = 'EUR'

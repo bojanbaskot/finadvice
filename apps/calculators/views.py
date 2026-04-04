@@ -3,12 +3,12 @@ from django.views.generic import View, TemplateView
 from .calculators import (
     calculate_loan_annuity, calculate_mortgage,
     calculate_investment_return, calculate_savings_goal,
-    compare_loan_offers,
+    calculate_deposit, convert_currency, compare_loan_offers,
 )
 from .forms import (
     LoanCalculatorForm, MortgageCalculatorForm,
     InvestmentCalculatorForm, SavingsCalculatorForm,
-    LoanComparisonForm,
+    LoanComparisonForm, DepositCalculatorForm, CurrencyConverterForm,
 )
 from .models import InterestRateOffer, Bank
 
@@ -124,6 +124,59 @@ class LoanComparisonView(View):
         return render(request, self.template_name, {
             'form': form, 'results': results, 'rates': rates,
         })
+
+
+class DepositCalculatorView(View):
+    template_name = 'calculators/deposit.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': DepositCalculatorForm()})
+
+    def post(self, request):
+        form = DepositCalculatorForm(request.POST)
+        results = None
+        if form.is_valid():
+            results = calculate_deposit(
+                principal=form.cleaned_data['principal'],
+                annual_rate_pct=form.cleaned_data['annual_rate'],
+                term_months=form.cleaned_data['term_months'],
+                compound=form.cleaned_data['compound'],
+            )
+        return render(request, self.template_name, {'form': form, 'results': results})
+
+
+class CurrencyConverterView(View):
+    template_name = 'calculators/currency.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'form': CurrencyConverterForm(),
+            'rates_info': _get_rates_table(),
+        })
+
+    def post(self, request):
+        form = CurrencyConverterForm(request.POST)
+        result = None
+        if form.is_valid():
+            result = convert_currency(
+                amount=form.cleaned_data['amount'],
+                from_currency=form.cleaned_data['from_currency'],
+                to_currency=form.cleaned_data['to_currency'],
+            )
+        return render(request, self.template_name, {
+            'form': form, 'result': result,
+            'rates_info': _get_rates_table(),
+        })
+
+
+def _get_rates_table():
+    """BAM-based exchange rate table for display."""
+    from .calculators import CURRENCY_RATES
+    return [
+        {'pair': f'{f}/{t}', 'rate': r}
+        for (f, t), r in CURRENCY_RATES.items()
+        if f == 'BAM'
+    ]
 
 
 class InterestRatesView(TemplateView):
