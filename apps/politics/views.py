@@ -9,14 +9,46 @@ from .models import (
 )
 
 
+PERIOD_OPTIONS = {
+    'day':   {'days': 1,  'label': 'Danas',    'short': '1d'},
+    'week':  {'days': 7,  'label': 'Sedmica',  'short': '7d'},
+    'month': {'days': 30, 'label': 'Mjesec',   'short': '30d'},
+}
+
+
+def _period_counts(days):
+    """Return (total, pos, neg, neu, rs, fbih) for the given number of days back."""
+    since = timezone.now() - timedelta(days=days)
+    qs = PoliticalMention.objects.filter(article_date__gte=since)
+    total = qs.count()
+    pos   = qs.filter(sentiment_label='positive').count()
+    neg   = qs.filter(sentiment_label='negative').count()
+    rs    = qs.filter(portal__entity='RS').count()
+    fbih  = qs.filter(portal__entity='FBiH').count()
+    return {'total': total, 'positive': pos, 'negative': neg,
+            'neutral': total - pos - neg, 'rs': rs, 'fbih': fbih}
+
+
 class PoliticsDashboardView(TemplateView):
     template_name = 'politics/dashboard.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        since = timezone.now() - timedelta(days=30)
 
-        # Top figures by mention count (last 30 days)
+        # Active period from ?period= query param, default month
+        period_key = self.request.GET.get('period', 'month')
+        if period_key not in PERIOD_OPTIONS:
+            period_key = 'month'
+        days = PERIOD_OPTIONS[period_key]['days']
+        since = timezone.now() - timedelta(days=days)
+
+        # Pre-compute counts for all three periods (shown as summary row)
+        period_stats = {
+            key: _period_counts(opt['days'])
+            for key, opt in PERIOD_OPTIONS.items()
+        }
+
+        # Top figures for selected period
         top_figures = (
             PoliticalFigure.objects.filter(is_active=True)
             .annotate(
@@ -27,7 +59,7 @@ class PoliticsDashboardView(TemplateView):
             .order_by('-mention_count')[:10]
         )
 
-        # Top parties by mention count
+        # Top parties for selected period
         top_parties = (
             PoliticalParty.objects.filter(is_active=True)
             .annotate(
@@ -38,38 +70,29 @@ class PoliticsDashboardView(TemplateView):
             .order_by('-mention_count')[:8]
         )
 
-        # Recent mentions
+        # Recent mentions for selected period
         recent_mentions = (
             PoliticalMention.objects.select_related('figure', 'party', 'portal')
             .filter(article_date__gte=since)
             .order_by('-article_date')[:20]
         )
 
-        # Sentiment totals
-        total = PoliticalMention.objects.filter(article_date__gte=since).count()
-        pos = PoliticalMention.objects.filter(article_date__gte=since, sentiment_label='positive').count()
-        neg = PoliticalMention.objects.filter(article_date__gte=since, sentiment_label='negative').count()
-        neu = total - pos - neg
-
-        # Entity split: RS vs FBiH portals
-        rs_mentions = PoliticalMention.objects.filter(
-            article_date__gte=since, portal__entity='RS'
-        ).count()
-        fbih_mentions = PoliticalMention.objects.filter(
-            article_date__gte=since, portal__entity='FBiH'
-        ).count()
+        current = period_stats[period_key]
 
         ctx.update({
             'top_figures': top_figures,
             'top_parties': top_parties,
             'recent_mentions': recent_mentions,
-            'total_mentions': total,
-            'positive_count': pos,
-            'negative_count': neg,
-            'neutral_count': neu,
-            'rs_mentions': rs_mentions,
-            'fbih_mentions': fbih_mentions,
-            'since_days': 30,
+            'total_mentions': current['total'],
+            'positive_count': current['positive'],
+            'negative_count': current['negative'],
+            'neutral_count':  current['neutral'],
+            'rs_mentions':    current['rs'],
+            'fbih_mentions':  current['fbih'],
+            'since_days': days,
+            'period_key': period_key,
+            'period_options': PERIOD_OPTIONS,
+            'period_stats': period_stats,
             'active_portals': MediaPortal.objects.filter(is_active=True).count(),
             'last_logs': MentionScrapeLog.objects.select_related('portal').order_by('-created_at')[:10],
         })

@@ -4,10 +4,10 @@
 <div class="container py-5">
 
   {# ── Page header ── #}
-  <div class="row mb-4">
+  <div class="row mb-3">
     <div class="col">
       <h1 class="h3 fw-bold mb-1"><i class="bi bi-people me-2 text-primary"></i>Politička statistika</h1>
-      <p class="text-muted mb-0">Pomeni političkih aktera i stranaka u bh. medijima — posljednjih {{ since_days }} dana</p>
+      <p class="text-muted mb-0">Pomeni političkih aktera i stranaka u bh. medijima</p>
     </div>
     <div class="col-auto d-flex align-items-center gap-2">
       <a href="{% url 'politics:mention-list' %}" class="btn btn-sm btn-outline-secondary">
@@ -16,7 +16,88 @@
     </div>
   </div>
 
-  {# ── KPI cards ── #}
+  {# ── Period switcher ── #}
+  <ul class="nav nav-pills mb-4">
+    {% for key, opt in period_options.items %}
+    <li class="nav-item">
+      <a class="nav-link {% if period_key == key %}active{% endif %}" href="?period={{ key }}">
+        {{ opt.label }}
+        <span class="badge {% if period_key == key %}bg-white text-primary{% else %}bg-primary{% endif %} ms-1">
+          {{ period_stats|dictsort:key }}
+          {# show total count per period #}
+          {% if key == 'day' %}{{ period_stats.day.total }}{% elif key == 'week' %}{{ period_stats.week.total }}{% else %}{{ period_stats.month.total }}{% endif %}
+        </span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+
+  {# ── Period comparison summary ── #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle text-center">
+          <thead class="table-light">
+            <tr>
+              <th class="text-start ps-3">Period</th>
+              <th>Ukupno</th>
+              <th class="text-success">Pozitivnih</th>
+              <th class="text-danger">Negativnih</th>
+              <th class="text-secondary">Neutralnih</th>
+              <th style="color:#e67e00">FBiH portali</th>
+              <th class="text-danger">RS portali</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, opt in period_options.items %}
+            {% if key == 'day' %}{% with s=period_stats.day %}
+            <tr {% if period_key == key %}class="table-primary fw-bold"{% endif %}>
+              <td class="text-start ps-3">
+                <a href="?period={{ key }}" class="text-decoration-none">{{ opt.label }}</a>
+                <span class="text-muted fw-normal small ms-1">({{ opt.short }} unazad)</span>
+              </td>
+              <td>{{ s.total }}</td>
+              <td class="text-success">{{ s.positive }}</td>
+              <td class="text-danger">{{ s.negative }}</td>
+              <td class="text-secondary">{{ s.neutral }}</td>
+              <td>{{ s.fbih }}</td>
+              <td>{{ s.rs }}</td>
+            </tr>
+            {% endwith %}{% elif key == 'week' %}{% with s=period_stats.week %}
+            <tr {% if period_key == key %}class="table-primary fw-bold"{% endif %}>
+              <td class="text-start ps-3">
+                <a href="?period={{ key }}" class="text-decoration-none">{{ opt.label }}</a>
+                <span class="text-muted fw-normal small ms-1">({{ opt.short }} unazad)</span>
+              </td>
+              <td>{{ s.total }}</td>
+              <td class="text-success">{{ s.positive }}</td>
+              <td class="text-danger">{{ s.negative }}</td>
+              <td class="text-secondary">{{ s.neutral }}</td>
+              <td>{{ s.fbih }}</td>
+              <td>{{ s.rs }}</td>
+            </tr>
+            {% endwith %}{% else %}{% with s=period_stats.month %}
+            <tr {% if period_key == key %}class="table-primary fw-bold"{% endif %}>
+              <td class="text-start ps-3">
+                <a href="?period={{ key }}" class="text-decoration-none">{{ opt.label }}</a>
+                <span class="text-muted fw-normal small ms-1">({{ opt.short }} unazad)</span>
+              </td>
+              <td>{{ s.total }}</td>
+              <td class="text-success">{{ s.positive }}</td>
+              <td class="text-danger">{{ s.negative }}</td>
+              <td class="text-secondary">{{ s.neutral }}</td>
+              <td>{{ s.fbih }}</td>
+              <td>{{ s.rs }}</td>
+            </tr>
+            {% endwith %}{% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ── KPI cards for selected period ── #}
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm text-center py-3">
