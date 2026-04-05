@@ -22,9 +22,23 @@ class PoliticalFigureAdmin(admin.ModelAdmin):
 
 @admin.register(MediaPortal)
 class MediaPortalAdmin(admin.ModelAdmin):
-    list_display = ('name', 'entity', 'portal_type', 'is_active', 'last_scraped', 'articles_collected')
+    list_display = ('name', 'entity', 'portal_type', 'has_rss', 'is_active', 'last_scraped', 'articles_collected')
     list_filter = ('entity', 'portal_type', 'is_active')
-    search_fields = ('name', 'url')
+    search_fields = ('name', 'url', 'rss_url')
+    list_editable = ('is_active',)
+    actions = ['activate', 'deactivate']
+
+    @admin.display(boolean=True, description='RSS')
+    def has_rss(self, obj):
+        return bool(obj.rss_url)
+
+    @admin.action(description='Aktiviraj odabrane portale')
+    def activate(self, request, queryset):
+        queryset.update(is_active=True)
+
+    @admin.action(description='Deaktiviraj odabrane portale')
+    def deactivate(self, request, queryset):
+        queryset.update(is_active=False)
 
 
 @admin.register(PoliticalMention)
