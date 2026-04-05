@@ -98,22 +98,33 @@ def scrape_portal(portal, figures, parties, dry_run=False):
         raw_text = _strip_html(_entry_text(entry))
         article_date = _parse_date(entry)
 
-        # Check each figure
-        for variant_lower, figure in figure_lookup.items():
-            if variant_lower not in raw_text.lower():
-                continue
+        # One mention per article URL — figure takes priority over party
+        matched_figure = None
+        matched_party = None
 
-            # Found a mention
+        for variant_lower, figure in figure_lookup.items():
+            if variant_lower in raw_text.lower():
+                matched_figure = (variant_lower, figure)
+                break
+
+        if not matched_figure:
+            for variant_lower, party in party_lookup.items():
+                if variant_lower in raw_text.lower():
+                    matched_party = (variant_lower, party)
+                    break
+
+        if matched_figure:
+            variant_lower, figure = matched_figure
             name_variants = figure.get_name_list()
             excerpt = extract_mention_excerpt(raw_text, name_variants)
             score, label = analyze_sentiment(raw_text)
 
             if not dry_run:
-                obj, created = PoliticalMention.objects.get_or_create(
+                _, created = PoliticalMention.objects.get_or_create(
                     article_url=url,
-                    figure=figure,
                     defaults={
                         'portal': portal,
+                        'figure': figure,
                         'party': figure.party,
                         'article_title': title[:500],
                         'article_date': article_date,
@@ -127,23 +138,19 @@ def scrape_portal(portal, figures, parties, dry_run=False):
                     mentions_found += 1
             else:
                 mentions_found += 1
-            break  # count article once per figure (avoid duplicate per variant)
 
-        # Check parties (only if no figure matched for this article)
-        for variant_lower, party in party_lookup.items():
-            if variant_lower not in raw_text.lower():
-                continue
-
+        elif matched_party:
+            variant_lower, party = matched_party
             excerpt = extract_mention_excerpt(raw_text, [party.name, party.abbreviation or ''])
             score, label = analyze_sentiment(raw_text)
 
             if not dry_run:
-                obj, created = PoliticalMention.objects.get_or_create(
+                _, created = PoliticalMention.objects.get_or_create(
                     article_url=url,
-                    party=party,
-                    figure=None,
                     defaults={
                         'portal': portal,
+                        'figure': None,
+                        'party': party,
                         'article_title': title[:500],
                         'article_date': article_date,
                         'excerpt': excerpt,
@@ -156,7 +163,6 @@ def scrape_portal(portal, figures, parties, dry_run=False):
                     mentions_found += 1
             else:
                 mentions_found += 1
-            break
 
     return {
         'articles_checked': articles_checked,
