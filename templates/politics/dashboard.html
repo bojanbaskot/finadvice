@@ -138,7 +138,7 @@
               {% for party in top_parties %}
               <tr>
                 <td class="ps-3">
-                  <a href="{% url 'politics:party-detail' party.abbreviation %}" class="text-decoration-none fw-medium">{{ party.abbreviation }}</a>
+                  <a href="{% url 'politics:party-detail' party.pk %}" class="text-decoration-none fw-medium">{{ party.abbreviation }}</a>
                   <br><span class="small text-muted">{{ party.name|truncatechars:40 }}</span>
                 </td>
                 <td><span class="badge bg-light text-dark border">{{ party.entity }}</span></td>

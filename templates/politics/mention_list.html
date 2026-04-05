@@ -81,7 +81,7 @@
                     <a href="{% url 'politics:figure-detail' mention.figure.slug %}" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none">{{ mention.figure.name }}</a>
                     {% endif %}
                     {% if mention.party %}
-                    <a href="{% url 'politics:party-detail' mention.party.abbreviation %}" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none">{{ mention.party.abbreviation }}</a>
+                    <a href="{% url 'politics:party-detail' mention.party.pk %}" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none">{{ mention.party.abbreviation }}</a>
                     {% endif %}
                   </div>
                 </div>

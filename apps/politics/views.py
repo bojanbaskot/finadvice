@@ -112,8 +112,6 @@ class PartyDetailView(DetailView):
     model = PoliticalParty
     template_name = 'politics/party_detail.html'
     context_object_name = 'party'
-    slug_field = 'abbreviation'
-    slug_url_kwarg = 'abbreviation'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
