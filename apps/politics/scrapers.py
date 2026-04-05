@@ -10,6 +10,8 @@ import feedparser
 
 from .sentiment import analyze_sentiment, extract_mention_excerpt
 
+BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0'
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,7 +78,7 @@ def scrape_portal(portal, figures, parties, dry_run=False):
             party_lookup[variant] = party
 
     try:
-        feed = feedparser.parse(portal.rss_url)
+        feed = feedparser.parse(portal.rss_url, agent=BROWSER_UA)
     except Exception as exc:
         return {'articles_checked': 0, 'mentions_found': 0, 'error_message': str(exc)}
 
