@@ -34,7 +34,7 @@
 <section class="py-5 bg-light">
   <div class="container">
     <div class="row g-4">
-      <div class="col-md-3">
+      <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
           <i class="bi bi-newspaper text-primary fs-1 mb-3"></i>
           <h5>Vijesti &amp; Nekretnine</h5>
@@ -42,7 +42,7 @@
           <a href="{% url 'news:news-list' %}" class="btn btn-outline-primary btn-sm mt-auto">Otvori</a>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
           <i class="bi bi-mortarboard text-success fs-1 mb-3"></i>
           <h5>E-Learning</h5>
@@ -50,7 +50,7 @@
           <a href="{% url 'elearning:course-list' %}" class="btn btn-outline-success btn-sm mt-auto">Otvori</a>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
           <i class="bi bi-calculator text-warning fs-1 mb-3"></i>
           <h5>Kalkulatori</h5>
@@ -58,7 +58,15 @@
           <a href="{% url 'calculators:index' %}" class="btn btn-outline-warning btn-sm mt-auto">Otvori</a>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2 col-sm-6">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="bi bi-people text-info fs-1 mb-3"></i>
+          <h5>Statistike</h5>
+          <p class="text-muted small">Pomeni politickih aktera u medijima, sentiment analiza, RS/FBiH pregled.</p>
+          <a href="{% url 'politics:dashboard' %}" class="btn btn-outline-info btn-sm mt-auto">Otvori</a>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
           <i class="bi bi-bar-chart-line text-danger fs-1 mb-3"></i>
           <h5>Dubinske analize</h5>
@@ -79,7 +87,7 @@
     </div>
     <div class="row g-4">
       {% for article in featured_news %}
-      <div class="col-md-3">{% include "news/partials/_news_card.html" %}</div>
+      <div class="col-md-2 col-sm-6">{% include "news/partials/_news_card.html" %}</div>
       {% endfor %}
     </div>
   </div>
@@ -95,7 +103,7 @@
     </div>
     <div class="row g-4">
       {% for property in featured_properties %}
-      <div class="col-md-3">{% include "news/partials/_property_card.html" %}</div>
+      <div class="col-md-2 col-sm-6">{% include "news/partials/_property_card.html" %}</div>
       {% endfor %}
     </div>
   </div>
