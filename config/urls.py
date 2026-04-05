@@ -11,4 +11,5 @@ urlpatterns = [
     path('edukacija/', include('apps.elearning.urls', namespace='elearning')),
     path('kalkulatori/', include('apps.calculators.urls', namespace='calculators')),
     path('analize/', include('apps.analysis.urls', namespace='analysis')),
+    path('statistike/', include('apps.politics.urls', namespace='politics')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

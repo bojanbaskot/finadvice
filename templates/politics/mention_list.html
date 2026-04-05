@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Politički pomeni - Statistike - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'politics:dashboard' %}">Statistike</a></li>
+      <li class="breadcrumb-item active">Svi pomeni</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    {# ── Filters ── #}
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Filteri</h6>
+          <form method="get">
+            <div class="mb-3">
+              <label class="form-label small fw-medium">Entitet</label>
+              <select name="entity" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Svi entiteti</option>
+                <option value="national" {% if selected_entity == 'national' %}selected{% endif %}>Cijela BiH</option>
+                <option value="FBiH" {% if selected_entity == 'FBiH' %}selected{% endif %}>FBiH</option>
+                <option value="RS" {% if selected_entity == 'RS' %}selected{% endif %}>RS</option>
+                <option value="BD" {% if selected_entity == 'BD' %}selected{% endif %}>Brčko</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-medium">Sentiment</label>
+              <select name="sentiment" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Svi</option>
+                <option value="positive" {% if selected_sentiment == 'positive' %}selected{% endif %}>Pozitivni</option>
+                <option value="negative" {% if selected_sentiment == 'negative' %}selected{% endif %}>Negativni</option>
+                <option value="neutral" {% if selected_sentiment == 'neutral' %}selected{% endif %}>Neutralni</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-medium">Portal</label>
+              <select name="portal" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Svi portali</option>
+                {% for portal in portals %}
+                <option value="{{ portal.pk }}" {% if selected_portal == portal.pk|stringformat:"s" %}selected{% endif %}>{{ portal.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% if selected_entity or selected_sentiment or selected_portal %}
+            <a href="{% url 'politics:mention-list' %}" class="btn btn-sm btn-outline-secondary w-100">Resetuj filtere</a>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {# ── List ── #}
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between">
+          <h5 class="fw-bold mb-0">Politički pomeni</h5>
+          <span class="text-muted small align-self-center">{{ page_obj.paginator.count }} ukupno</span>
+        </div>
+        <div class="card-body p-0">
+          {% if mentions %}
+          <div class="list-group list-group-flush">
+            {% for mention in mentions %}
+            <div class="list-group-item px-3 py-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1 me-3">
+                  <a href="{{ mention.article_url }}" target="_blank" rel="noopener" class="text-decoration-none text-dark fw-medium">
+                    {{ mention.article_title|truncatechars:120 }}
+                  </a>
+                  {% if mention.excerpt %}
+                  <p class="text-muted small mt-1 mb-1">{{ mention.excerpt|truncatechars:180 }}</p>
+                  {% endif %}
+                  <div class="d-flex flex-wrap gap-1 mt-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ mention.portal.name }}</span>
+                    <span class="badge bg-light text-dark border">{{ mention.portal.entity }}</span>
+                    {% if mention.figure %}
+                    <a href="{% url 'politics:figure-detail' mention.figure.slug %}" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none">{{ mention.figure.name }}</a>
+                    {% endif %}
+                    {% if mention.party %}
+                    <a href="{% url 'politics:party-detail' mention.party.abbreviation %}" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none">{{ mention.party.abbreviation }}</a>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="text-end text-nowrap">
+                  {% if mention.sentiment_label == 'positive' %}
+                    <span class="badge bg-success bg-opacity-10 text-success">pozitivno</span>
+                  {% elif mention.sentiment_label == 'negative' %}
+                    <span class="badge bg-danger bg-opacity-10 text-danger">negativno</span>
+                  {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary">neutralno</span>
+                  {% endif %}
+                  <div class="small text-muted mt-1">{{ mention.article_date|date:"d.m.Y" }}</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {# Pagination #}
+          {% if is_paginated %}
+          <div class="d-flex justify-content-center py-3">
+            {% include "partials/_pagination.html" %}
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="p-5 text-center text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            Nema pomena koji odgovaraju filterima.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

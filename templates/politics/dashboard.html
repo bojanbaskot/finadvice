@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Politička statistika BiH - {{ site_settings.site_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+
+  {# ── Page header ── #}
+  <div class="row mb-4">
+    <div class="col">
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-people me-2 text-primary"></i>Politička statistika</h1>
+      <p class="text-muted mb-0">Pomeni političkih aktera i stranaka u bh. medijima — posljednjih {{ since_days }} dana</p>
+    </div>
+    <div class="col-auto d-flex align-items-center gap-2">
+      <a href="{% url 'politics:mention-list' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-list-ul me-1"></i>Svi pomeni
+      </a>
+    </div>
+  </div>
+
+  {# ── KPI cards ── #}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <div class="fs-2 fw-bold text-primary">{{ total_mentions }}</div>
+        <div class="text-muted small">Ukupno pomena</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <div class="fs-2 fw-bold text-success">{{ positive_count }}</div>
+        <div class="text-muted small">Pozitivnih</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <div class="fs-2 fw-bold text-danger">{{ negative_count }}</div>
+        <div class="text-muted small">Negativnih</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <div class="fs-2 fw-bold text-secondary">{{ active_portals }}</div>
+        <div class="text-muted small">Aktivnih portala</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Entity split ── #}
+  {% if rs_mentions or fbih_mentions %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h6 class="fw-bold mb-3">Raspodjela po entitetima</h6>
+      <div class="row text-center g-3">
+        <div class="col-6">
+          <div class="p-3 rounded" style="background:#fff3e0;">
+            <div class="h4 fw-bold text-warning mb-0">{{ fbih_mentions }}</div>
+            <div class="small text-muted">FBiH portali</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 rounded" style="background:#fce4ec;">
+            <div class="h4 fw-bold text-danger mb-0">{{ rs_mentions }}</div>
+            <div class="small text-muted">RS portali</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    {# ── Top figures ── #}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3 pb-0">
+          <h5 class="fw-bold mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Najspominjaniji akteri</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if top_figures %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light"><tr>
+                <th class="ps-3">Akter</th>
+                <th class="text-center">Pomeni</th>
+                <th class="text-center">Sentiment</th>
+              </tr></thead>
+              <tbody>
+              {% for fig in top_figures %}
+              <tr>
+                <td class="ps-3">
+                  <a href="{% url 'politics:figure-detail' fig.slug %}" class="text-decoration-none fw-medium">{{ fig.name }}</a>
+                  {% if fig.party %}<br><span class="badge bg-secondary bg-opacity-10 text-secondary small">{{ fig.party.abbreviation }}</span>{% endif %}
+                </td>
+                <td class="text-center fw-bold">{{ fig.mention_count }}</td>
+                <td class="text-center">
+                  {% if fig.avg_sentiment %}
+                    {% if fig.avg_sentiment > 0.05 %}
+                      <span class="badge bg-success bg-opacity-10 text-success">+{{ fig.avg_sentiment|floatformat:2 }}</span>
+                    {% elif fig.avg_sentiment < -0.05 %}
+                      <span class="badge bg-danger bg-opacity-10 text-danger">{{ fig.avg_sentiment|floatformat:2 }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ fig.avg_sentiment|floatformat:2 }}</span>
+                    {% endif %}
+                  {% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+            Nema podataka još. Pokrenite <code>python manage.py collect_mentions</code>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── Top parties ── #}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3 pb-0">
+          <h5 class="fw-bold mb-0"><i class="bi bi-flag me-2 text-primary"></i>Najspominjanije stranke</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if top_parties %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light"><tr>
+                <th class="ps-3">Stranka</th>
+                <th>Entitet</th>
+                <th class="text-center">Pomeni</th>
+                <th class="text-center">Sentiment</th>
+              </tr></thead>
+              <tbody>
+              {% for party in top_parties %}
+              <tr>
+                <td class="ps-3">
+                  <a href="{% url 'politics:party-detail' party.abbreviation %}" class="text-decoration-none fw-medium">{{ party.abbreviation }}</a>
+                  <br><span class="small text-muted">{{ party.name|truncatechars:40 }}</span>
+                </td>
+                <td><span class="badge bg-light text-dark border">{{ party.entity }}</span></td>
+                <td class="text-center fw-bold">{{ party.mention_count }}</td>
+                <td class="text-center">
+                  {% if party.avg_sentiment %}
+                    {% if party.avg_sentiment > 0.05 %}
+                      <span class="badge bg-success bg-opacity-10 text-success">+{{ party.avg_sentiment|floatformat:2 }}</span>
+                    {% elif party.avg_sentiment < -0.05 %}
+                      <span class="badge bg-danger bg-opacity-10 text-danger">{{ party.avg_sentiment|floatformat:2 }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ party.avg_sentiment|floatformat:2 }}</span>
+                    {% endif %}
+                  {% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nema podataka još.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── Recent mentions ── #}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0"><i class="bi bi-newspaper me-2 text-primary"></i>Najnoviji pomeni</h5>
+          <a href="{% url 'politics:mention-list' %}" class="btn btn-sm btn-outline-primary">Svi pomeni</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_mentions %}
+          <div class="list-group list-group-flush">
+            {% for mention in recent_mentions %}
+            <div class="list-group-item px-3 py-2">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1 me-2">
+                  <a href="{{ mention.article_url }}" target="_blank" rel="noopener" class="text-decoration-none text-dark fw-medium">
+                    {{ mention.article_title|truncatechars:100 }}
+                  </a>
+                  <div class="d-flex flex-wrap gap-2 mt-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ mention.portal.name }}</span>
+                    {% if mention.figure %}<span class="badge bg-secondary bg-opacity-10 text-secondary">{{ mention.figure.name }}</span>{% endif %}
+                    {% if mention.party and not mention.figure %}<span class="badge bg-secondary bg-opacity-10 text-secondary">{{ mention.party.abbreviation }}</span>{% endif %}
+                    <span class="badge bg-light text-dark border">{{ mention.portal.entity }}</span>
+                  </div>
+                </div>
+                <div class="text-end text-nowrap">
+                  {% if mention.sentiment_label == 'positive' %}
+                    <span class="badge bg-success bg-opacity-10 text-success">pozitivno</span>
+                  {% elif mention.sentiment_label == 'negative' %}
+                    <span class="badge bg-danger bg-opacity-10 text-danger">negativno</span>
+                  {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary">neutralno</span>
+                  {% endif %}
+                  <div class="small text-muted mt-1">{{ mention.article_date|date:"d.m.Y" }}</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="p-5 text-center text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            <p class="mb-2">Nema pomena još.</p>
+            <p class="small">Pokrenite: <code>python manage.py collect_mentions</code></p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── Scrape logs ── #}
+    {% if last_logs %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-3 pb-0">
+          <h6 class="fw-bold mb-0 text-muted"><i class="bi bi-clock-history me-2"></i>Log sakupljanja podataka</h6>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light"><tr>
+                <th class="ps-3">Portal</th><th>Status</th><th class="text-center">Provjera</th><th class="text-center">Pronađeno</th><th>Datum</th>
+              </tr></thead>
+              <tbody>
+              {% for log in last_logs %}
+              <tr>
+                <td class="ps-3">{{ log.portal.name }}</td>
+                <td>
+                  {% if log.status == 'success' %}<span class="badge bg-success">OK</span>
+                  {% elif log.status == 'partial' %}<span class="badge bg-warning text-dark">djelimično</span>
+                  {% else %}<span class="badge bg-danger">greška</span>{% endif %}
+                </td>
+                <td class="text-center">{{ log.articles_checked }}</td>
+                <td class="text-center">{{ log.mentions_found }}</td>
+                <td class="text-muted small">{{ log.created_at|date:"d.m.Y H:i" }}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>{# /row #}
+</div>
+{% endblock %}

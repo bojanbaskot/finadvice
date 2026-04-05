@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'apps.elearning',
     'apps.calculators',
     'apps.analysis',
+    'apps.politics',
 ]
 
 MIDDLEWARE = [
